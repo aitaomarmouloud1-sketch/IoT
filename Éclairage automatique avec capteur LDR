@@ -1,0 +1,29 @@
+#define LDR_PIN A0
+#define LED_PIN 9
+#define RELAY_PIN 7
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(RELAY_PIN, OUTPUT);
+}
+
+void loop() {
+  int lightLevel = analogRead(LDR_PIN);
+  
+  Serial.print("Niveau de lumière: ");
+  Serial.println(lightLevel);
+  
+  // Si sombre (valeur basse), allumer les lumières
+  if (lightLevel < 300) {
+    digitalWrite(LED_PIN, HIGH);
+    digitalWrite(RELAY_PIN, HIGH);
+    Serial.println("Lumières allumées");
+  } else {
+    digitalWrite(LED_PIN, LOW);
+    digitalWrite(RELAY_PIN, LOW);
+    Serial.println("Lumières éteintes");
+  }
+  
+  delay(500);
+}
