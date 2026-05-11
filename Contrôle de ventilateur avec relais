@@ -1,0 +1,32 @@
+#include <DHT.h>
+
+#define DHTPIN 2
+#define DHTTYPE DHT11
+#define RELAY_PIN 7
+#define TEMP_THRESHOLD 28
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(9600);
+  dht.begin();
+  pinMode(RELAY_PIN, OUTPUT);
+}
+
+void loop() {
+  float temperature = dht.readTemperature();
+  
+  Serial.print("Température: ");
+  Serial.print(temperature);
+  Serial.println("°C");
+  
+  if (temperature > TEMP_THRESHOLD) {
+    digitalWrite(RELAY_PIN, HIGH);
+    Serial.println("Ventilateur: ON");
+  } else {
+    digitalWrite(RELAY_PIN, LOW);
+    Serial.println("Ventilateur: OFF");
+  }
+  
+  delay(2000);
+}
