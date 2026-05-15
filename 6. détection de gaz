@@ -1,0 +1,69 @@
+// Définition des pins
+const int capteurGaz = A0;    // Pin analogique pour le capteur MQ-2
+const int buzzer = 8;          // Pin pour le buzzer
+const int ledVerte = 10;       // LED verte (sécuritaire)
+const int ledRouge = 11;       // LED rouge (danger)
+
+// Seuils de détection
+const int seuilAlerte = 300;   // Seuil d'alerte (ajustable selon calibration)
+const int seuilDanger = 600;   // Seuil de danger
+
+void setup() {
+  // Initialisation des pins
+  pinMode(capteurGaz, INPUT);
+  pinMode(buzzer, OUTPUT);
+  pinMode(ledVerte, OUTPUT);
+  pinMode(ledRouge, OUTPUT);
+  
+  // Initialisation de la communication série
+  Serial.begin(9600);
+  Serial.println("Système de détection de gaz initialisé");
+  Serial.println("Calibration en cours...");
+  
+  // Période de préchauffage du capteur (20-30 secondes)
+  for(int i = 0; i < 20; i++) {
+    digitalWrite(ledVerte, HIGH);
+    delay(500);
+    digitalWrite(ledVerte, LOW);
+    delay(500);
+  }
+  
+  Serial.println("Système prêt !");
+  digitalWrite(ledVerte, HIGH);
+}
+
+void loop() {
+  // Lecture de la valeur du capteur
+  int valeurGaz = analogRead(capteurGaz);
+  
+  // Affichage sur le moniteur série
+  Serial.print("Niveau de gaz détecté : ");
+  Serial.println(valeurGaz);
+  
+  // Vérification des seuils et activation des alertes
+  if (valeurGaz < seuilAlerte) {
+    // Niveau normal - LED verte
+    digitalWrite(ledVerte, HIGH);
+    digitalWrite(ledRouge, LOW);
+    noTone(buzzer);
+    Serial.println("État : NORMAL");
+    
+  } else if (valeurGaz >= seuilAlerte && valeurGaz < seuilDanger) {
+    // Niveau d'alerte - LED rouge clignotante
+    digitalWrite(ledVerte, LOW);
+    digitalWrite(ledRouge, HIGH);
+    tone(buzzer, 1000, 200);  // Bip court
+    delay(200);
+    digitalWrite(ledRouge, LOW);
+    Serial.println("État : ALERTE - Gaz détecté !");
+    
+  } else {
+    // Niveau de danger - Alarme continue
+    digitalWrite(ledVerte, LOW);
+    digitalWrite(ledRouge, HIGH);
+    tone(buzzer, 2000);  // Alarme continue
+    Serial.println("État : DANGER - Évacuez immédiatement !");
+  }
+  
+  delay(1000);  // Délai d'1 seconde entre les lectures
+}
