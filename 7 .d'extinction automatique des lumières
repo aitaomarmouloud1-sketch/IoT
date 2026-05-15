@@ -1,0 +1,84 @@
+
+// Définition des pins
+const int capteurPIR = 2;      // Pin digital pour le capteur PIR
+const int relais = 7;          // Pin pour contrôler le relais
+const int ledIndicateur = 13;  // LED intégrée pour indication
+
+// Variables de temporisation
+unsigned long dernierMouvement = 0;
+const unsigned long delaiExtinction = 30000;  // 30 secondes (ajustable)
+
+// État du système
+bool lumiereAllumee = false;
+bool mouvementDetecte = false;
+
+void setup() {
+  // Initialisation des pins
+  pinMode(capteurPIR, INPUT);
+  pinMode(relais, OUTPUT);
+  pinMode(ledIndicateur, OUTPUT);
+  
+  // État initial : lumières éteintes
+  digitalWrite(relais, LOW);
+  digitalWrite(ledIndicateur, LOW);
+  
+  // Initialisation de la communication série
+  Serial.begin(9600);
+  Serial.println("Système d'extinction automatique initialisé");
+  Serial.println("Calibration du capteur PIR...");
+  
+  // Période de calibration du capteur PIR (30-60 secondes)
+  for(int i = 0; i < 30; i++) {
+    digitalWrite(ledIndicateur, HIGH);
+    delay(500);
+    digitalWrite(ledIndicateur, LOW);
+    delay(500);
+  }
+  
+  Serial.println("Système prêt !");
+  Serial.print("Délai d'extinction : ");
+  Serial.print(delaiExtinction / 1000);
+  Serial.println(" secondes");
+}
+
+void loop() {
+  // Lecture du capteur PIR
+  mouvementDetecte = digitalRead(capteurPIR);
+  
+  if (mouvementDetecte == HIGH) {
+    // Mouvement détecté
+    dernierMouvement = millis();
+    
+    if (!lumiereAllumee) {
+      // Allumer la lumière
+      digitalWrite(relais, HIGH);
+      digitalWrite(ledIndicateur, HIGH);
+      lumiereAllumee = true;
+      Serial.println(">>> MOUVEMENT DÉTECTÉ - Lumière ALLUMÉE");
+    } else {
+      // Réinitialiser le timer
+      Serial.println("Mouvement détecté - Timer réinitialisé");
+    }
+  }
+  
+  // Vérifier si le délai d'extinction est écoulé
+  if (lumiereAllumee && (millis() - dernierMouvement >= delaiExtinction)) {
+    // Éteindre la lumière
+    digitalWrite(relais, LOW);
+    digitalWrite(ledIndicateur, LOW);
+    lumiereAllumee = false;
+    Serial.println("<<< Aucun mouvement - Lumière ÉTEINTE");
+  }
+  
+  // Affichage de l'état
+  if (lumiereAllumee) {
+    unsigned long tempsRestant = delaiExtinction - (millis() - dernierMouvement);
+    if (tempsRestant > 0) {
+      Serial.print("Temps avant extinction : ");
+      Serial.print(tempsRestant / 1000);
+      Serial.println(" secondes");
+    }
+  }
+  
+  delay(1000);  // Vérification chaque seconde
+}
